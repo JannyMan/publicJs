@@ -1,0 +1,93 @@
+/*
+* 1 将网页传送的json数据转换为字符串并return返回结果
+*      1.1  for in 遍历   arr数组=arr.push(json属性=json[json属性值]);
+*      2.2  arr数组转换成字符串    arr.join("&");
+* 2 检验
+*      2.1 判断传入的json值
+*      2.2 调用转化json的函数并接收返回值
+* 3 创建连接
+* 4 连接
+* 5 发送
+* 6 接收
+*      6.1  判断自身的状态   如果为true 首先关闭定时器
+*      6.2  判断xmlhttprequest状态
+*           成功条件[200,300) || 304
+* 7 设置延迟关闭函数   使用定时器
+*/
+
+
+
+
+
+var $={};
+$.ajax=ajax;
+//将json转化为 url链接
+// "weibo.php?act=add&content=xxx"
+var c=json2url();
+// console.log(c);
+function json2url(json) {
+    var json={
+        url:"index.php",
+        user:"xiaomai",
+        pass:"123456"
+    };
+    var arr=[];
+    json.t=Math.random();
+    for(var name in json){
+        arr.push(name+"="+json[name]);
+    }
+    // console.log(arr);
+    //["url=index.php", "user=xiaomai", "pass=123456", "t=0.9232431833558847"]
+    return arr.join("&");
+}
+//使用json传送数据
+function ajax(option) {
+    //判断option内的数值状况
+    //判断json是否为空
+    option=option || {};
+    if(!option) return; //为空直接结束代码运行
+
+    option.type=option.type || "get";
+    option.data=option.data || {};
+    option.timeout=option.timeout || 0;
+    //将option内的data数据传送给json2url
+    //转化为url，并赋给str；
+    var str=json2url(option.data);
+
+    // ajax开始
+    //创建连接
+    if(window.XMLHttpRequest){
+        //高级浏览器
+        var xhr=new XMLHttpRequest();
+    }else{
+        //IE6
+        var xhr=new ActiveXObject("Microsoft.XMLHTTP");
+    }
+    //建立连接
+    //判断连接方式
+    if(option.type=="get"){
+        xhr.open("get",option.url+"?"+str,true);
+        //发送
+        xhr.send();
+    }else{
+        xhr.open("post",option.url,true);
+        xhr.send(str);
+    }
+    //接收
+    xhr.onreadystatechange=function () {
+        if(xhr.readyState==4){//浏览器准备好
+            clearTimeout(timer);
+            if(xhr.status>=200 && xhr.status<300 || xhr.status==304){
+                option.success && option.success(xhr.responseText);
+            }else {
+                option.error && option.error(xhr.status);
+            }
+        }
+    };
+    //延迟定时关闭链接
+    if(option.timeout){
+        var timer=setTimeout(function () {
+            xhr.abort();
+        },option.timeout);
+    }
+}
